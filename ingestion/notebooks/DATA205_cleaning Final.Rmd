@@ -1,0 +1,69 @@
+---
+title: "DATA 205 – Data Cleaning"
+author: "Djeneba Kounta"
+output: html_document
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+```
+
+# 1. Employee Salaries 2023
+
+```{r}
+salaries <- read_csv("https://data.montgomerycountymd.gov/api/views/iv8c-428b/rows.csv?accessType=DOWNLOAD")
+
+# Column names in lowercase with underscores
+names(salaries) <- names(salaries) |> str_to_lower() |> str_replace_all(" ", "_")
+
+salaries_clean <- salaries |>
+  distinct() |>                                                
+  mutate(
+    base_salary   = parse_number(as.character(base_salary)),   
+    overtime_pay  = replace_na(parse_number(as.character(overtime_pay)), 0), # no overtime recorded = $0
+    longevity_pay = replace_na(parse_number(as.character(longevity_pay)), 0),  # no longevity recorded = $0
+    gender        = replace_na(gender, "Unknown")
+  ) |>
+  filter(!is.na(base_salary))  # remove rows with no salary
+       
+
+write_csv(salaries_clean, "salaries_clean.csv")
+```
+
+# 2. Rent (2022 Rental Facility Occupancy Survey)
+
+```{r}
+rent <- read_csv("https://data.montgomerycountymd.gov/api/views/65hk-6zwc/rows.csv?accessType=DOWNLOAD")
+
+# Column names in lowercase with underscores
+names(rent) <- names(rent) |> str_to_lower() |> str_replace_all(" ", "_")
+
+rent_clean <- rent |>
+  distinct() |>                                                         
+  rename(bedroom_type = bedroom_types,
+         rent = average_rent_2022) |>                                    
+  mutate(across(contains("rent"), ~ parse_number(as.character(.x)))) |>  # remove $ and commas from rent columns
+  filter(!is.na(rent))                                                   
+write_csv(rent_clean, "rent_clean.csv")
+```
+
+# 3. Self-Sufficiency Standard (2023)
+
+The Self-Sufficiency Standard is published as a report, not a dataset, so the values are entered as a table from the 2023 Montgomery County report. All costs are monthly.
+
+```{r}
+
+self_suff <- tribble(
+  ~family_type,                              ~adults, ~children, ~housing, ~child_care, ~food, ~transportation, ~health_care, ~taxes, ~hourly_wage, ~monthly_wage, ~annual_wage,
+  "1 adult",                                 1,       0,         1699,     0,           413,   189,             238,          1038,   22.39,        3941,          47294,
+  "1 adult + 1 preschooler",                 1,       1,         1934,     1677,        610,   189,             667,          2160,   43.41,        7639,          91674,
+  "1 adult + 1 preschooler + 1 school-age",  1,       2,         1934,     2698,        905,   189,             697,          2996,   55.33,        9739,          116864,
+  "2 adults + 1 preschooler + 1 school-age", 2,       2,         1934,     2698,        1207,  378,             790,          2816,   29.11,        10245,         122943
+)
+
+self_suff
+
+
+
+write_csv(self_suff, "self_sufficiency.csv")
+```
