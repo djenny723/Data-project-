@@ -1,0 +1,5 @@
+family_type,adults,children,housing,child_care,food,transportation,health_care,taxes,hourly_wage,monthly_wage,annual_wage
+1 adult,1,0,1699,0,413,189,238,1038,22.39,3941,47294
+1 adult + 1 preschooler,1,1,1934,1677,610,189,667,2160,43.41,7639,91674
+1 adult + 1 preschooler + 1 school-age,1,2,1934,2698,905,189,697,2996,55.33,9739,116864
+2 adults + 1 preschooler + 1 school-age,2,2,1934,2698,1207,378,790,2816,29.11,10245,122943
