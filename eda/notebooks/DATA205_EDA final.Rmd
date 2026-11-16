@@ -1,0 +1,105 @@
+---
+title: "DATA 205 – Exploratory Data Analysis"
+author: "Djeneba Kounta"
+output: html_document
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+
+salaries  <- read_csv("salaries_clean.csv")
+rent      <- read_csv("rent_clean.csv")
+self_suff <- read_csv("self_sufficiency.csv")
+```
+
+# 1. Employee Salaries
+
+```{r}
+# Summary of base salary
+summary(salaries$base_salary)
+```
+
+```{r}
+# Distribution of base salary
+ggplot(salaries, aes(x = base_salary)) +
+  geom_histogram(bins = 50, fill = "#00BFC4", color = "white") +
+  scale_x_continuous(labels = scales::label_dollar(scale = 1/1000, suffix = "k")) +
+  labs(title = "Distribution of Base Salary", x = "Base Salary", y = "Number of Employees")
+```
+
+```{r}
+# Average base salary by gender
+salaries |>
+  group_by(gender) |>
+  summarise(employees = n(), average_salary = mean(base_salary))
+
+ggplot(salaries, aes(x = gender, y = base_salary, fill = gender)) +
+  geom_boxplot(show.legend = FALSE) +
+  scale_y_continuous(labels = scales::label_dollar(scale = 1/1000, suffix = "k")) +
+  labs(title = "Base Salary by Gender", x = "Gender", y = "Base Salary")
+```
+
+```{r}
+# Average base salary for the 10 largest departments
+top_departments <- salaries |>
+  group_by(department_name) |>
+  summarise(employees = n(), average_salary = mean(base_salary)) |>
+  slice_max(employees, n = 10)
+
+top_departments
+
+ggplot(top_departments, aes(x = reorder(department_name, average_salary), y = average_salary, fill = department_name)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_y_continuous(labels = scales::label_dollar(scale = 1/1000, suffix = "k")) +
+  labs(title = "Average Base Salary in the 10 Largest Departments", x = "", y = "Average Base Salary")
+```
+
+# 2. Rent
+
+```{r}
+# Summary of monthly rent
+summary(rent$rent)
+```
+
+```{r}
+# Median monthly rent by bedroom type
+rent_by_bedroom <- rent |>
+  group_by(bedroom_type) |>
+  summarise(units = n(), median_rent = median(rent))
+
+rent_by_bedroom
+
+ggplot(rent, aes(x = bedroom_type, y = rent, fill = bedroom_type)) +
+  geom_boxplot(show.legend = FALSE) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  labs(title = "Monthly Rent by Bedroom Type", x = "Bedroom Type", y = "Monthly Rent")
+```
+
+# 3. Self-Sufficiency Standard
+
+```{r}
+self_suff
+
+# Minimum annual salary needed by family type
+ggplot(self_suff, aes(x = reorder(family_type, annual_wage), y = annual_wage, fill = family_type)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_y_continuous(labels = scales::label_dollar(scale = 1/1000, suffix = "k")) +
+  labs(title = "Minimum Annual Salary Needed in Montgomery County (2023)", x = "", y = "Annual Self-Sufficiency Wage")
+```
+
+```{r}
+# Monthly costs by family type
+self_suff |>
+  select(family_type, housing, child_care, food, transportation, health_care, taxes) |>
+  pivot_longer(-family_type, names_to = "cost", values_to = "amount") |>
+  ggplot(aes(x = family_type, y = amount, fill = cost)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  labs(title = "Monthly Costs by Family Type", x = "", y = "Monthly Cost", fill = "Cost")
+```
+
+
+
